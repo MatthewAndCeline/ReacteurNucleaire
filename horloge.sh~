@@ -1,0 +1,13 @@
+#!bin/bash
+
+while read line
+do
+	echo "$line"
+done < test.txt
+
+sleep 5
+
+while read line
+do
+	echo "$line"
+done < test2.txt

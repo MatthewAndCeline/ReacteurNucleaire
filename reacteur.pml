@@ -5,13 +5,19 @@
 #define TIME_TO_SLEEP 3000
 
 chan STDIN
-chan in_capteur[4] = [3] of { byte }
+chan in_capteur[4] = [3] of { byte  }
 chan out_capteur[4] = [3] of { int } 
 chan out_collect[3] = [1] of { byte }
 active proctype Controller() {
-	c_code {
-		#include <unistd.h>
-		sleep(3000);
-	}
-	printf("coucou\n")
+	byte c;
+	printf("Coucou\n");
+end:
+	do
+		:: STDIN ? c ->
+			if
+			:: c == 10 -> printf("Nouvelle donne\n")
+			:: c == 4 -> break
+			:: else -> printf("Illegal %d \n", c)
+			fi
+	od
 }
