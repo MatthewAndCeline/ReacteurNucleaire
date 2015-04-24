@@ -1,0 +1,26 @@
+digraph p_Collector {
+size="8,10";
+  GT [shape=box,style=dotted,label="Collector"];
+  GT -> S26;
+	S26 -> S2  [color=black,style=bold,label="in_collect[numCollector]?_"];
+	S2 -> S3  [color=black,style=solid,label="printf('Collecteur %d reçu signal ',numCollector)"];
+	S3 -> S4  [color=black,style=bold,label="in_capteur[0]!0"];
+	S4 -> S5  [color=black,style=bold,label="in_capteur[1]!0"];
+	S5 -> S6  [color=black,style=bold,label="in_capteur[2]!0"];
+	S6 -> S7  [color=black,style=bold,label="in_capteur[3]!0"];
+	S7 -> S8  [color=black,style=bold,label="out_capteur[0]?valeur1"];
+	S8 -> S9  [color=black,style=bold,label="out_capteur[1]?valeur2"];
+	S9 -> S10  [color=black,style=bold,label="out_capteur[2]?valeur3"];
+	S10 -> S11  [color=black,style=bold,label="out_capteur[3]?valeur4"];
+	S11 -> S12  [color=black,style=solid,label="printf('Collecteur %d reçu valeur %d du capteur 0 ',numCollector,valeur1)"];
+	S12 -> S13  [color=black,style=solid,label="printf('Collecteur %d reçu valeur %d du capteur 1 ',numCollector,valeur2)"];
+	S13 -> S14  [color=black,style=solid,label="printf('Collecteur %d reçu valeur %d du capteur 2 ',numCollector,valeur3)"];
+	S14 -> S24  [color=black,style=solid,label="printf('Collecteur %d reçu valeur %d du capteur 3 ',numCollector,valeur4)"];
+	S24 -> S20  [color=black,style=solid,label="((((((valeur1==valeur2)&&(valeur2==valeur3))||((valeur1==valeur2)&&(valeur2==valeur4)))||((valeur1==valeur3)&&(valeur3==valeur4)))||((valeur2==valeur3)&&(valeur3==valeur4))))"];
+	S24 -> S23  [color=black,style=solid,label="else"];
+	S20 -> S17  [color=black,style=solid,label="((valeur1<450))"];
+	S20 -> S19  [color=black,style=solid,label="else"];
+	S17 -> S26  [color=black,style=bold,label="out_collect[numCollector]!1"];
+	S19 -> S26  [color=black,style=bold,label="out_collect[numCollector]!0"];
+	S23 -> S26  [color=black,style=bold,label="out_collect[numCollector]!2"];
+}

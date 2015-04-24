@@ -12,7 +12,11 @@ chan in_collect[3] = [0] of { int };
 int test01[12] = { 400, 450, 460, 460, 400, 460, 460, 460, 460, 400, 400, 400 };
 int test02[12] = { 400, 450, 420, 430, 400, 450, 420, 430, 400, 400, 400, 400 };
 int test03[12] = { 100, 100, 100, 100, 100, 100, 100, 110, 100, 100, 100, 100};
+int test04[12] = { 400, 400, 390, 400, 400, 250, 400, 400, 300, 400, 400, 400};
+int test05[12] = { 400, 400, 390, 400, 400, 250, 400, 400, 300, 400, 350, 370};
 int numTest = 0;
+
+
 
 active proctype lanceur() {
 
@@ -25,7 +29,7 @@ active proctype lanceur() {
 	run Collector(2);
 	run Controller()
 }
-
+ 
 proctype Controller() {
 	int c;
 	int retourCollecteur[3];
@@ -41,12 +45,12 @@ end:
 			if
 			:: c == 10 -> printf("Nouvelle donne\n")
 			:: c == 4 -> break
-			:: c == 49 -> 
-				numTest = 1; 
+			:: (c == 49 || c == 50 || c == 51 || c == 52 || c == 53)-> 
+				numTest = c - 48; 
 				in_collect[0]!0; in_collect[1]!0; in_collect[2]!0;
 				out_collect[0] ? retourCollecteur[0]; out_collect[1] ? retourCollecteur[1]; out_collect[2] ? retourCollecteur[2];
 				printf("Controleur reçu valeur %d du collecteur 0\n", retourCollecteur[0]);
-					printf("Controleur reçu valeur %d du collecteur 1\n", retourCollecteur[1]);
+				printf("Controleur reçu valeur %d du collecteur 1\n", retourCollecteur[1]);
 				printf("Controleur reçu valeur %d du collecteur 2\n", retourCollecteur[2]);
 				nbTNormale = 0; nbDefail = 0; nbAlarm = 0;
 				for (i: 0 .. 2) {
@@ -105,10 +109,19 @@ int valeur4 = 0;
 }
 
 proctype Capteur(int numCapteur) {
-	int valeur = 400 + numCapteur;
+
+	int cpt = 0;
+	int valeur = 0;
 	do
 		:: in_capteur[numCapteur] ? _ ->
-			/*printf("Capteur %d envoie la valeur %d\n", numCapteur, valeur);*/
+			cpt = ((cpt+1) % 3);
+			if 
+				::(numTest ==1) -> valeur = test01[3*numCapteur + cpt]
+				::(numTest ==2) -> valeur = test02[3*numCapteur + cpt]
+				::(numTest ==3) -> valeur = test03[3*numCapteur + cpt]
+				::(numTest ==4) -> valeur = test04[3*numCapteur + cpt]
+				::(numTest ==5) -> valeur = test05[3*numCapteur + cpt]
+			fi;
 			out_capteur[numCapteur] ! valeur
 	od
 }
