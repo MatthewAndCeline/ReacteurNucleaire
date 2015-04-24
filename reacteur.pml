@@ -5,35 +5,49 @@
 #define TIME_TO_SLEEP 3000
 
 chan STDIN
-chan in_capteur[4] = [3] of { byte  }
+chan in_capteur[4] = [3] of { int  }
 chan out_capteur[4] = [3] of { int } 
-chan out_collect[3] = [1] of { byte }
+chan out_collect[3] = [1] of { int }
+chan in_collect[3] = [0] of { int }
+
+
+
+int test01[12] = { 400, 450, 460, 460, 400, 460, 460, 460, 460, 400, 400, 400 }
+int test02[12] = { 400, 450, 420, 430, 400, 450, 420, 430, 400, 400, 400, 400 }
+int test03[12] = { 100, 100, 100, 100, 100, 100, 100, 110, 100, 100, 100, 100}
+
+int numTest = 0
+
+active proctype lanceur() {
+	
+}
+
 active proctype Controller() {
 	int c;
-	int d = 0;
-	int cpt = 0;
-	printf("Coucou\n");
+	printf("%d %d %d\n", test01[0], test01[1], test01[2])
 end:
 	do
 		:: STDIN ? c ->
-			printf("Valeur de d : %d \n", d)
-			printf("Valeur de cpt : %d \n", cpt)
 			if
 			:: c == 10 -> printf("Nouvelle donne\n")
 			:: c == 4 -> break
-			:: else -> if
-				:: c < 48 -> printf("Illegal %d \n", c)
-				:: c > 57 -> printf("Illegal %d \n", c)
-				:: else -> if
-					:: cpt == 0 -> d = d + ((c- 48)*100)
-					:: cpt == 1 -> d = d + ((c- 48)*10)
-					:: cpt == 2 -> d = d + ((c- 48)*1)
-					fi
-				fi
-			fi
-			if
-			:: cpt == 2 -> printf("Valeur de d : %d \n", d);cpt = 0; d=0
-			:: else -> cpt = cpt +1
+			:: c == 49 -> 
+				numTest = 1; 
+				in_collect[0]!0;
+				in_collect[1]!0;
+				in_collect[2]!0;
+			:: else ->  printf("Illegal %d \n", c)
 			fi
 	od
 }
+
+proctype Collector() {
+
+	do
+		:: in_collect[0] ? _ -> printf("Collecteur reçu signal")
+			:: in_collect[1] ? _ -> printf("Collecteur 2 reçu signal")
+		:: in_collect[2] ? _ -> printf("Collecteur 3 reçu signal")
+	od
+}
+
+
