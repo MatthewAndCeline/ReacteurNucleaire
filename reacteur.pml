@@ -91,15 +91,15 @@ int valeur4 = 0;
 			printf("Collecteur %d reçu valeur %d du capteur 3\n", numCollector, valeur4);
 			if
 				:: ( (valeur1 == valeur2 && valeur2 == valeur3) 
-					|| (valeur1 == valeur2 && valeur2 == valeur4)
-					|| (valeur1 == valeur3 && valeur3 == valeur4)
-					|| (valeur2 == valeur3 && valeur3 == valeur4) 		) ->
+					|| (valeur1 == valeur2 && valeur2 == valeur4)
+					|| (valeur1 == valeur3 && valeur3 == valeur4)
+					|| (valeur2 == valeur3 && valeur3 == valeur4)) ->
 					if
-						:: (valeur 1 < SEUIL) -> out_collect[numCollector] ! TEMPERATURE_NORMALE
+						:: (valeur1 < SEUIL) -> out_collect[numCollector] ! TEMPERATURE_NORMALE
 						:: else -> out_collect[numCollector] ! ALARME_TEMPERATURE
-					fi
+					fi;
 				:: else -> 	                                                                               
-					out_collect[numCollector] ! DEFAILLANCE_CAPTEUR
+					out_collect[numCollector] ! DEFAILLANCE_CAPTEURS
 			fi
 	od
 }
