@@ -2,13 +2,12 @@
 #define ALARME_TEMPERATURE 0
 #define TEMPERATURE_NORMALE 1
 #define DEFAILLANCE_CAPTEURS 2
-#define TIME_TO_SLEEP 3000
 #define NB_COLLECTEURS 3
 #define NB_CAPTEURS 4
 
 chan STDIN
-chan in_capteur[NB_CAPTEURS] = [3] of { int  };
-chan out_capteur[NB_CAPTEURS] = [3] of { int }; 
+chan in_capteur[NB_CAPTEURS] = [NB_COLLECTEURS] of { int  };
+chan out_capteur[NB_CAPTEURS] = [NB_COLLECTEURS] of { int }; 
 chan out_collect[NB_COLLECTEURS] = [1] of { int };
 chan in_collect[NB_COLLECTEURS] = [0] of { int };
 
@@ -34,10 +33,10 @@ active proctype lanceur() {
 		test[3].valeur[i] = test04[i];
 		test[4].valeur[i] = test05[i];
 	}
-	for (i: 0 .. NB_CAPTEURS) {
+	for (i: 0 .. NB_CAPTEURS - 1) {
 		run Capteur(i)
 	};
-	for (i: 0 .. NB_COLLECTEURS) {
+	for (i: 0 .. NB_COLLECTEURS - 1) {
 		run Collecteur(i)
 	};
 	run Simulateur()
@@ -94,43 +93,22 @@ proctype Controleur() {
 		:: ( nbAlarm > 0 ) -> printf("Baisse les barres, voyant rouge")
 		:: ( nbDefail == NB_COLLECTEURS) -> printf("Baisse les barres, voyant rouge clignotant")
 		:: ( nbDefail == NB_COLLECTEURS - 1 && nbTNormale == 1) -> printf("Baisse les barres, voyant orange")
-		:: ( nbDefail == NB_COLLECTEURS - 2 && nbTNormale == 2) -> printf("voyant orange")
+		:: ( nbDefail < NB_COLLECTEURS - 1 && nbTNormale > 1 && nbTNormale != NB_COLLECTEURS) -> 
+			printf("voyant orange") 
 		:: ( nbTNormale == NB_COLLECTEURS) -> printf("voyant vert")
+		/*:: else -> printf("voyant orange")*/
 	fi
 }
-
-/* proctype UneDifference(int valeurs, chan retour) {
-
-	int valeursDifferentes[2] = { 0, 0};
-	int nbValeurs[2] = {0, 0};
-	int i;
-	bool dejaVuDeuxiemeValeur = false;
-	bool vuPlusDeDeuxValeurs = false;
-
-	valeursDifferentes[0] = valeurs[0]; 
-
-	for (i: 1..NB_CAPTEURS - 1) {
-		if
-			:: ( valeurs[i] == valeursDifferentes[0] ) -> 
-				nbValeurs[0] = nbValeurs[0] + 1
-			:: ( dejaVuDeuxiemeValeur && valeurs[i] == valeursDifferentes[1]) -> 
-				nbValeurs[1] = nbValeurs[1] + 1
-			:: ( !dejaVuDeuxiemeValeur && valeurs[i] != valeursDifferentes[0]) ->
-				valeursDifferentes[1] = valeurs[i];
-				nbValeurs[1] = nbValeurs[1] + 1;
-				dejaVuDeuxiemeValeur = true
-			:: ( dejaVuDeuxiemeValeur && valeurs[i] != valeursDifferentes[0] && valeurs[i] != valeursDifferentes[1]) ->
-				vuPlusDeDeuxValeurs = true
-		fi
-	};
-		retour ! (! (nbValeurs[1] > NB_CAPTEURS - 2 || nbValeurs[2] > NB_CAPTEURS - 2))
-	retour ! 0
-} */
 
 proctype Collecteur(int numCollecteur) {
 
 	int i;
 	int valeur[4];
+	int valeursDifferentes[2] = { 0, 0};
+	int nbValeurs[2] = {0, 0};
+	int valeurCommune = 0;
+	bool dejaVuDeuxiemeValeur = false;
+	bool troisCapteursIdentiques = false;
 
 	do
 		:: in_collect[numCollecteur] ? _ -> 
@@ -144,13 +122,39 @@ proctype Collecteur(int numCollecteur) {
 			for (i: 0 .. NB_CAPTEURS - 1) {
 				printf("Collecteur %d reçu valeur %d du capteur %d\n", numCollecteur, valeur[i], i)
 			};
+			valeursDifferentes[0] = valeur[0]; 
+			valeursDifferentes[1] = 0;
+			nbValeurs[0] = 1; nbValeurs[1] = 0;
+			dejaVuDeuxiemeValeur = false;
+			troisCapteursIdentiques = false;
+			for (i: 1..(NB_CAPTEURS - 1)) {
+				/*printf("Collecteur %d : Vu valeur %d\n", numCollecteur, valeur[i])*/
+				if
+					:: ( valeur[i] == valeursDifferentes[0] ) -> 
+						nbValeurs[0] = nbValeurs[0] + 1
+					:: ( dejaVuDeuxiemeValeur && valeur[i] == valeursDifferentes[1]) -> 
+						nbValeurs[1] = nbValeurs[1] + 1
+					:: ( !dejaVuDeuxiemeValeur && valeur[i] != valeursDifferentes[0]) ->
+						valeursDifferentes[1] = valeur[i];
+						nbValeurs[1] = nbValeurs[1] + 1;
+						dejaVuDeuxiemeValeur = true
+					:: else -> skip
+				fi
+			};
 			if
-				:: ((valeur[0] == valeur[1] && valeur[1] == valeur[2]) 
-				|| (valeur[0] == valeur[1] && valeur[1] == valeur[3])
-				|| (valeur[0] == valeur[2] && valeur[2] == valeur[3])
-				|| (valeur[1] == valeur[2] && valeur[2] == valeur[3])) ->
+				:: (nbValeurs[0] > NB_CAPTEURS - 2) -> 
+					valeurCommune = valeursDifferentes[0];
+					troisCapteursIdentiques = true
+				:: (nbValeurs[1] > NB_CAPTEURS - 2) -> 
+					valeurCommune = valeursDifferentes[1];
+					troisCapteursIdentiques = true
+				:: else -> troisCapteursIdentiques = false
+			fi;
+			if
+				:: (troisCapteursIdentiques) ->
 					if
-						:: (valeur[0] < SEUIL) -> out_collect[numCollecteur] ! TEMPERATURE_NORMALE
+						:: (valeurCommune < SEUIL) -> 
+							out_collect[numCollecteur] ! TEMPERATURE_NORMALE
 						:: else -> out_collect[numCollecteur] ! ALARME_TEMPERATURE
 					fi;
 				:: else -> 	                                                                               
@@ -170,6 +174,9 @@ proctype Capteur(int numCapteur) {
 			out_capteur[numCapteur] ! valeur
 	od
 }
+
+
+
 
 
 
