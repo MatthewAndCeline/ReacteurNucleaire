@@ -128,6 +128,7 @@ proctype Collecteur(int numCollecteur) {
 			dejaVuDeuxiemeValeur = false;
 			troisCapteursIdentiques = false;
 			for (i: 1..(NB_CAPTEURS - 1)) {
+				/*printf("Collecteur %d : Vu valeur %d\n", numCollecteur, valeur[i])*/
 				if
 					:: ( valeur[i] == valeursDifferentes[0] ) -> 
 						nbValeurs[0] = nbValeurs[0] + 1
