@@ -1,9 +1,0 @@
-digraph p_Capteur {
-size="8,10";
-  GT [shape=box,style=dotted,label="Capteur"];
-  GT -> S5;
-	S5 -> S2  [color=black,style=bold,label="in_capteur[numCapteur]?_"];
-	S2 -> S3  [color=black,style=solid,label="cpt = ((cpt+1)%3)"];
-	S3 -> S4  [color=black,style=bold,label="valeur = test[numTest].valeur[((3*numCapteur)+cpt)]"];
-	S4 -> S5  [color=black,style=bold,label="out_capteur[numCapteur]!valeur"];
-}

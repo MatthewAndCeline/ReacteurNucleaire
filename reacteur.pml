@@ -2,8 +2,8 @@
 #define ALARME_TEMPERATURE 0
 #define TEMPERATURE_NORMALE 1
 #define DEFAILLANCE_CAPTEURS 2
-#define NB_COLLECTEURS 3
-#define NB_CAPTEURS 4
+#define NB_COLLECTEURS 5
+#define NB_CAPTEURS 2
 
 chan STDIN
 chan in_capteur[NB_CAPTEURS] = [NB_COLLECTEURS] of { int  };
@@ -15,18 +15,18 @@ typedef testArray {
 	int valeur[NB_CAPTEURS * NB_COLLECTEURS]
 }
 testArray test[5];
-int test01[NB_CAPTEURS * NB_COLLECTEURS] = { 400, 450, 460, 460, 400, 460, 460, 460, 460, 400, 400, 400 };
-int test02[NB_CAPTEURS * NB_COLLECTEURS] = { 400, 450, 420, 430, 400, 450, 420, 430, 400, 400, 400, 400 };
-int test03[NB_CAPTEURS * NB_COLLECTEURS] = { 100, 100, 100, 100, 100, 100, 100, 110, 100, 100, 100, 100};
-int test04[NB_CAPTEURS * NB_COLLECTEURS] = { 400, 400, 390, 400, 400, 250, 400, 400, 300, 400, 400, 400};
-int test05[NB_CAPTEURS * NB_COLLECTEURS] = { 400, 400, 390, 400, 400, 250, 400, 400, 300, 400, 350, 370};
+int test01[NB_CAPTEURS * NB_COLLECTEURS] = { 400, 450, 460, 460, 400, 460, 460, 460, 460, 460 };
+int test02[NB_CAPTEURS * NB_COLLECTEURS] = { 400, 400, 420, 430, 400, 450, 420, 430, 400, 400 };
+int test03[NB_CAPTEURS * NB_COLLECTEURS] = { 100, 100, 100, 100, 100, 100, 100, 110, 100, 100 };
+int test04[NB_CAPTEURS * NB_COLLECTEURS] = { 400, 400, 390, 400, 400, 250, 400, 400, 300, 400 };
+int test05[NB_CAPTEURS * NB_COLLECTEURS] = { 400, 400, 390, 400, 400, 250, 400, 400, 300, 400 };
 int numTest = 0;
 
 
 active proctype lanceur() {
 
 	int i;
-	for (i: 0..11) {
+	for (i: 0..(NB_CAPTEURS * NB_COLLECTEURS - 1)) {
 		test[0].valeur[i] = test01[i];
 		test[1].valeur[i] = test02[i];
 		test[2].valeur[i] = test03[i];
@@ -82,7 +82,7 @@ proctype Controleur() {
 		fi
 	};
 	nbTNormale = 0; nbDefail = 0; nbAlarm = 0;
-	for (i: 0 .. 2) {
+	for (i: 0 .. NB_COLLECTEURS - 1) {
 		if
 			:: (retourCollecteur[i] == ALARME_TEMPERATURE) -> nbAlarm++
 			:: (retourCollecteur[i] == TEMPERATURE_NORMALE) -> nbTNormale++
@@ -96,14 +96,14 @@ proctype Controleur() {
 		:: ( nbDefail < NB_COLLECTEURS - 1 && nbTNormale > 1 && nbTNormale != NB_COLLECTEURS) -> 
 			printf("voyant orange") 
 		:: ( nbTNormale == NB_COLLECTEURS) -> printf("voyant vert")
-		/*:: else -> printf("voyant orange")*/
+		:: else -> printf("cas non pris en compte, nbDefail = %d ;; nbAlarm = %d ;; nbTNormale = %d \n", nbDefail, nbAlarm, nbTNormale)
 	fi
 }
 
 proctype Collecteur(int numCollecteur) {
 
 	int i;
-	int valeur[4];
+	int valeur[NB_CAPTEURS];
 	int valeursDifferentes[2] = { 0, 0};
 	int nbValeurs[2] = {0, 0};
 	int valeurCommune = 0;
@@ -170,6 +170,7 @@ proctype Capteur(int numCapteur) {
 	do
 		:: in_capteur[numCapteur] ? _ ->
 			cpt = ((cpt+1) % NB_COLLECTEURS);
+			printf("Capteur %d, lecture case %d, valeur %d\n", numCapteur, NB_COLLECTEURS*numCapteur + cpt, test[numTest].valeur[NB_COLLECTEURS*numCapteur + cpt]);
 			valeur = test[numTest].valeur[NB_COLLECTEURS*numCapteur + cpt];
 			out_capteur[numCapteur] ! valeur
 	od
