@@ -169,7 +169,6 @@ proctype Capteur(int numCapteur) {
 	do
 		:: in_capteur[numCapteur] ? _ ->
 			cpt = ((cpt+1) % NB_COLLECTEURS);
-			printf("Capteur %d, lecture case %d, valeur %d\n", numCapteur, NB_COLLECTEURS*numCapteur + cpt, test[numTest].valeur[NB_COLLECTEURS*numCapteur + cpt]);
 			valeur = test[numTest].valeur[NB_COLLECTEURS*numCapteur + cpt];
 			out_capteur[numCapteur] ! valeur
 	od
